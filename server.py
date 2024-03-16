@@ -5,10 +5,6 @@ from gradio_app import demo
 
 app = FastAPI()
 
-@app.get("/")
-async def read_root():
-    return {"message": "Hello World"}
-
 app = gr.mount_gradio_app(app, demo, path="/")
 
 
