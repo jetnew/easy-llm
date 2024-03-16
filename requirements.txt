@@ -1,0 +1,11 @@
+python-dotenv
+openai
+tiktoken
+flask[async]
+beautifulsoup4
+gunicorn
+gradio
+pandas
+pypdf
+fastapi
+uvicorn
