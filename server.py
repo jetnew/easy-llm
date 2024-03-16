@@ -1,7 +1,7 @@
 import gradio as gr
 import uvicorn
 from fastapi import FastAPI
-from gradio_app import gr_app
+from gradio_app import demo
 
 app = FastAPI()
 
@@ -9,7 +9,7 @@ app = FastAPI()
 async def read_root():
     return {"message": "Hello World"}
 
-app = gr.mount_gradio_app(app, gr_app, path="/")
+app = gr.mount_gradio_app(app, demo, path="/")
 
 
 if __name__ == "__main__":
