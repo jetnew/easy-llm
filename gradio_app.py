@@ -37,13 +37,17 @@ def prettify_json_string(s):
     return s
 
 def fn_batch(prompt, df, file=None):
-    vars = re.findall(r'\{([^{}]*?)\}', prompt.replace('{{', '!@#').replace('}}', '#@!'))
+    vars = re.findall(r'\{\{([^{}]*?)\}\}', prompt)
     data = df.to_dict('records')
     for v in vars:
         if not all(v in d for d in data):
             raise gr.Error("Prompt variables must match column headers in data.")
+    responses = []
     with ThreadPoolExecutor(max_workers=30) as executor:
-        responses = [executor.submit(llm, [{"role": "user", "content": prompt.format(**d)}]).result() for d in data]
+        for d in data:
+            for k, v in d.items():
+                prompt = prompt.replace("{{"+k+"}}", v)
+            responses.append(executor.submit(llm, [{"role": "user", "content": prompt}]).result())
     df['response'] = [prettify_json_string(r) for r in responses]
     if file:
         df.to_csv(file, index=False)
@@ -88,7 +92,7 @@ with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
 
     with gr.Tab(label="BatchPrompter"):
-        prompt = gr.Textbox(label="Prompt", value="You are a friendly AI.\n\nReply to {name}'s message:\n\n{message}")
+        prompt = gr.Textbox(label="Prompt", value="You are a friendly AI.\n\nReply to {{name}}'s message:\n\n{{message}}")
         file = gr.File(label="Data")
         df = gr.DataFrame(pd.DataFrame({
             "name": ["John", "Jane"],

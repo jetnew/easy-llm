@@ -1,0 +1,54 @@
+{
+    "basic_information": {
+        "candidate_name": <candidate-name>,
+        "years_of_relevant_experience": <years-of-experience>,
+    },
+    "automatic_disqualification": <"Y"/"N">,
+    "criteria_1": {
+        "heuristic_1": {
+            "experience_in_top_tier_startups": <"Y"/"N">,
+            "evidence_startup": <evidence>,
+            "experience_in_leading_saas_companies": <"Y"/"N">,
+            "evidence_saas": <evidence>
+        },
+        "heuristic_2": {
+            "experience_in_smaller_or_entrepreneurial": <"Y"/"N">,
+            "evidence_smaller_entrepreneurial": <evidence>
+        },
+        "justification": <justification>,
+        "total_score": <0-3>,
+    },
+    "criteria_2": {
+        "prospecting_skills_evidence": <evidence>,
+        "closing_skills": <evidence>,
+        "quantifiable_success": <evidence>,
+        "sales_role_category_identified": <evidence>,
+        "justification": <justification>,
+        "total_score": <0-5>,
+    },
+    "criteria_3": {
+        "trait_1": {
+            "industry_specific_knowledge_skills_and_experience": {
+                "keywords_identified": [<keyword>, ...],
+                "evidence": <evidence>,
+                "score": <0-1>,
+            }
+        },
+        "trait_2": {
+            "experience_with_target_customer_segments": {
+                "target_segment": <target-segment>,
+                "evidence": <evidence>,
+                "score": <0-1>,
+            }
+        },
+        "justification": <justification>,
+        "total_score": <0-2>,
+    },
+    "holistic_overview": {
+        "pros": <pros>,
+        "cons": <cons>,
+        "final_score": <0-10>,
+        "interview_recommended": <"Y"/"N">,
+    },
+    "areas_for_further_exploration_during_interview": [<area>, ...]
+}
