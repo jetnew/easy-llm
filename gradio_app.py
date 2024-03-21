@@ -34,14 +34,11 @@ def prettify_json_string(s):
     json_string = extract_json_string(s)
     if json_string:
         try:
-            # Attempt to load and dump the JSON string to format it.
             formatted_json = json.dumps(json.loads(json_string), indent=4)
             return s.replace(json_string, formatted_json)
         except json.decoder.JSONDecodeError as e:
-            # Handle JSON format errors or return a meaningful error message.
             print(f"Error decoding JSON: {e}")
             print(s)
-            # Optionally, return the original string or handle the error as needed.
             return s
     return s
 
@@ -70,7 +67,7 @@ def fn_upload(file):
     return [gr.DataFrame(pd.read_csv(file), visible=True), gr.DownloadButton(visible=True, value=file)]
 
 def fn_auto(df, prompt):
-    system = """Design a new prompt for GPT-4 that responds to the following inputs with the corresponding outputs.
+    system = """Design a new prompt for GPT-4 that responds to the following inputs with the corresponding outputs exactly.
     
 A good prompt generally has 3 elements:
 1. A clear instruction for the model to follow.
@@ -82,7 +79,7 @@ Only respond with the final prompt."""
         for i, row in df.iterrows():
             system += f"\n\nExample {i+1}:\nInput:\n{row['input']}\nOutput:\n{row['output']}"
     else:
-        system += """\n\nWith reference to the previous prompt and how the generated responses differ from the outputs, design a new prompt that better guides the model to generate the correct outputs.
+        system += """\n\nWith reference to the current prompt and how the generated responses are different from the corresponding outputs, design a new prompt that better guides the model to generate the exact outputs.
 
 It may be useful to specify what the model should do or not do.
 
@@ -122,10 +119,8 @@ with gr.Blocks() as demo:
 
     with gr.Tab(label="AutoPrompter"):
         df = gr.DataFrame(pd.DataFrame({
-            "input": ["John, Data Scientist, Google", "Jane, Software Engineer, Facebook"],
-            "output": [
-                "Score: 10/10\nExplanation: As a data scientist at Google, John is highly qualified for the job opening of data scientist at Microsoft.",
-                "Score: 5/10\nExplanation: Although Facebook is a prestigious tech company, Jane's experience as a software engineer is not directly relevant to the data scientist role at Microsoft."]
+            "input": ["The quick brown fox jumped over the lazy dog", "That was a hell of an amazing movie, man.", "What the hell is this? This movie sucks!"],
+            "output": ["NEUTRAL", "POSITIVE", "NEGATIVE"]
             }),
             interactive=True,
             datatype="markdown"
