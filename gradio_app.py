@@ -36,7 +36,7 @@ def prettify_json_string(s):
         return s.replace(json_string, json.dumps(json.loads(json_string), indent=4))
     return s
 
-def fn_batch(prompt, df, file):
+def fn_batch(prompt, df, file=None):
     vars = re.findall(r'\{([^{}]*?)\}', prompt.replace('{{', '!@#').replace('}}', '#@!'))
     data = df.to_dict('records')
     for v in vars:
@@ -45,7 +45,8 @@ def fn_batch(prompt, df, file):
     with ThreadPoolExecutor(max_workers=30) as executor:
         responses = [executor.submit(llm, [{"role": "user", "content": prompt.format(**d)}]).result() for d in data]
     df['response'] = [prettify_json_string(r) for r in responses]
-    df.to_csv(file, index=False)
+    if file:
+        df.to_csv(file, index=False)
     return gr.DataFrame(df, interactive=True, datatype=["str"] * (len(df.columns) - 1) + ["markdown"])
 
 def fn_upload(file):
@@ -53,29 +54,53 @@ def fn_upload(file):
         return [gr.DataFrame(visible=False), gr.DownloadButton(visible=False)]
     return [gr.DataFrame(pd.read_csv(file), visible=True), gr.DownloadButton(visible=True, value=file)]
 
-def fn_auto(metaprompt, df):
-    vars = re.findall(r'\{([^{}]*?)\}', metaprompt.replace('{{', '!@#').replace('}}', '#@!'))
+def fn_auto(df, prompt):
+    system = """Design a new prompt for GPT-4 that responds to the following inputs with the corresponding outputs.
+    
+A good prompt generally has 3 elements:
+1. A clear instruction for the model to follow.
+2. Good examples of inputs and outputs.
+3. The output format.
+
+Only respond with the final prompt."""
+    if not prompt:
+        for i, row in df.iterrows():
+            system += f"\n\nExample {i+1}:\nInput:\n{row['input']}\nOutput:\n{row['output']}"
+    else:
+        system += """\n\nWith reference to the previous prompt and how the generated responses differ from the outputs, design a new prompt that better guides the model to generate the correct outputs.
+
+It may be useful to specify what the model should do or not do.
+
+Only respond with the new prompt."""
+        system += f"\n\nPrevious Prompt:\n{prompt}"
+        for i, row in df.iterrows():
+            system += f"\n\nExample {i+1}:\nInput:\n{row['input']}\nOutput:\n{row['output']}\nResponse:\n{row['response']}"
+    print(system)
+    prompt = llm([{"role": "user", "content": system}])
     data = df.to_dict('records')
-    for v in vars:
-        if not all(v in d for d in data):
-            raise gr.Error("Prompt variables must match column headers in data.")
     with ThreadPoolExecutor(max_workers=30) as executor:
-        responses = [executor.submit(llm, [{"role": "user", "content": metaprompt.format(**d)}]).result() for d in data]
-    df['response'] = responses
-    return gr.DataFrame(df, interactive=True)
+        responses = [executor.submit(llm, [{"role": "user", "content": (prompt + "\n\nInput:\n{input}\n\nOutput:\n").format(**d)}]).result() for d in data]
+    response = [prettify_json_string(r) for r in responses]
+    df['response'] = response
+    return [gr.Textbox(prompt, visible=True), gr.DataFrame(df)]
 
 with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
-    # with gr.Tab(label="AutoPrompter"):
-    #     metaprompt = gr.Textbox(label="Meta-prompt", value="Generate a prompt that responds to {input} with {output}.")
-    #     df = gr.DataFrame(pd.DataFrame({
-    #         "input": ["John, Data Scientist, Makes $10K/month", "Jane, Temp Staff, Makes $3K/month"],
-    #         "output": ["Hi there! How are you doing today? *winks*", "Hello. What do you want?"]
-    #         }),
-    #         interactive=True,
-    #     )
-    #     run = gr.Button("🚀 Run")
-    #     run.click(fn=fn_auto, inputs=[metaprompt, df], outputs=df)
+
+    with gr.Tab(label="AutoPrompter"):
+        df = gr.DataFrame(pd.DataFrame({
+            "input": ["John, Data Scientist, Google", "Jane, Software Engineer, Facebook"],
+            "output": [
+                "Score: 10/10\nExplanation: As a data scientist at Google, John is highly qualified for the job opening of data scientist at Microsoft.",
+                "Score: 5/10\nExplanation: Although Facebook is a prestigious tech company, Jane's experience as a software engineer is not directly relevant to the data scientist role at Microsoft."]
+            }),
+            interactive=True,
+            datatype="markdown"
+        )
+        prompt = gr.Textbox(label="Prompt", value="")
+        run = gr.Button("🚀 Run")
+        run.click(fn=fn_auto, inputs=[df, prompt], outputs=[prompt, df])
+
     with gr.Tab(label="BatchPrompter"):
         prompt = gr.Textbox(label="Prompt", value="You are a friendly AI.\n\nReply to {name}'s message:\n\n{message}")
         file = gr.File(label="Data")
