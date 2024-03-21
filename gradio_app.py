@@ -33,7 +33,16 @@ def extract_json_string(s):
 def prettify_json_string(s):
     json_string = extract_json_string(s)
     if json_string:
-        return s.replace(json_string, json.dumps(json.loads(json_string), indent=4))
+        try:
+            # Attempt to load and dump the JSON string to format it.
+            formatted_json = json.dumps(json.loads(json_string), indent=4)
+            return s.replace(json_string, formatted_json)
+        except json.decoder.JSONDecodeError as e:
+            # Handle JSON format errors or return a meaningful error message.
+            print(f"Error decoding JSON: {e}")
+            print(s)
+            # Optionally, return the original string or handle the error as needed.
+            return s
     return s
 
 def fn_batch(prompt, df, file=None):
@@ -45,10 +54,11 @@ def fn_batch(prompt, df, file=None):
     responses = []
     with ThreadPoolExecutor(max_workers=40) as executor:
         for d in data:
+            new_prompt = prompt
             for k, v in d.items():
-                prompt = prompt.replace("{{"+k+"}}", v)
-            responses.append(executor.submit(llm, [{"role": "user", "content": prompt}]).result())
-    print(responses)
+                new_prompt = new_prompt.replace("{{"+k+"}}", str(v))
+            responses.append(executor.submit(llm, [{"role": "user", "content": new_prompt}]))
+    responses = [r.result() for r in responses]
     df['response'] = [prettify_json_string(r) for r in responses]
     if file:
         df.to_csv(file, index=False)
@@ -82,8 +92,11 @@ Only respond with the new prompt."""
             system += f"\n\nExample {i+1}:\nInput:\n{row['input']}\nOutput:\n{row['output']}\nResponse:\n{row['response']}"
     prompt = llm([{"role": "user", "content": system}])
     data = df.to_dict('records')
+    responses = []
     with ThreadPoolExecutor(max_workers=40) as executor:
-        responses = [executor.submit(llm, [{"role": "user", "content": (prompt + "\n\nInput:\n{input}\n\nOutput:\n").format(**d)}]).result() for d in data]
+        for d in data:
+            responses.append(executor.submit(llm, [{"role": "user", "content": prompt + "\n\nInput:\n{input}\n\nOutput:\n".format(**d)}]))
+    responses = [r.result() for r in responses]
     response = [prettify_json_string(r) for r in responses]
     df['response'] = response
     return [gr.Textbox(prompt, visible=True), gr.DataFrame(df)]
