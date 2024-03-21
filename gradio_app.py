@@ -22,11 +22,18 @@ def llm(messages, model="gpt-4-turbo-preview", json_mode=False):
         response = json.loads(response)
     return response
 
+def extract_json_string(s):
+    open_braces, json_start_index = 0, s.find('{')
+    if json_start_index == -1: return None
+    for i in range(json_start_index, len(s)):
+        open_braces += (s[i] == '{') - (s[i] == '}')
+        if open_braces == 0: return s[json_start_index:i+1]
+    return None
+
 def prettify_json_string(s):
-    match = re.search(r'\{.*?\}', s, re.DOTALL) 
-    if match is not None:
-        json_str = match.group(0)
-        return s.replace(json_str, json.dumps(json.loads(json_str), indent=4))
+    json_string = extract_json_string(s)
+    if json_string:
+        return s.replace(json_string, json.dumps(json.loads(json_string), indent=4))
     return s
 
 def fn_run(prompt, df, file):
