@@ -43,11 +43,12 @@ def fn_batch(prompt, df, file=None):
         if not all(v in d for d in data):
             raise gr.Error("Prompt variables must match column headers in data.")
     responses = []
-    with ThreadPoolExecutor(max_workers=30) as executor:
+    with ThreadPoolExecutor(max_workers=40) as executor:
         for d in data:
             for k, v in d.items():
                 prompt = prompt.replace("{{"+k+"}}", v)
             responses.append(executor.submit(llm, [{"role": "user", "content": prompt}]).result())
+    print(responses)
     df['response'] = [prettify_json_string(r) for r in responses]
     if file:
         df.to_csv(file, index=False)
@@ -79,10 +80,9 @@ Only respond with the new prompt."""
         system += f"\n\nPrevious Prompt:\n{prompt}"
         for i, row in df.iterrows():
             system += f"\n\nExample {i+1}:\nInput:\n{row['input']}\nOutput:\n{row['output']}\nResponse:\n{row['response']}"
-    print(system)
     prompt = llm([{"role": "user", "content": system}])
     data = df.to_dict('records')
-    with ThreadPoolExecutor(max_workers=30) as executor:
+    with ThreadPoolExecutor(max_workers=40) as executor:
         responses = [executor.submit(llm, [{"role": "user", "content": (prompt + "\n\nInput:\n{input}\n\nOutput:\n").format(**d)}]).result() for d in data]
     response = [prettify_json_string(r) for r in responses]
     df['response'] = response
@@ -122,4 +122,5 @@ with gr.Blocks() as demo:
         run.click(fn=fn_auto, inputs=[df, prompt], outputs=[prompt, df])
 
 if __name__ == "__main__":
+    demo.queue(default_concurrency_limit=40)
     demo.launch()
