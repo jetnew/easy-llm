@@ -17,7 +17,7 @@ def llm(messages, model="gpt-4-turbo-preview", json_mode=False):
         max_tokens=4096,
         **kwargs
     )
-    response = response.choices[0].message.content
+    response = response.choices[0].message.content.replace("\u2019", "'").replace("\u2013", "-")
     if json_mode:
         response = json.loads(response)
     return response
