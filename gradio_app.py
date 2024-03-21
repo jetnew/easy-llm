@@ -87,20 +87,6 @@ Only respond with the new prompt."""
 with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
 
-    with gr.Tab(label="AutoPrompter"):
-        df = gr.DataFrame(pd.DataFrame({
-            "input": ["John, Data Scientist, Google", "Jane, Software Engineer, Facebook"],
-            "output": [
-                "Score: 10/10\nExplanation: As a data scientist at Google, John is highly qualified for the job opening of data scientist at Microsoft.",
-                "Score: 5/10\nExplanation: Although Facebook is a prestigious tech company, Jane's experience as a software engineer is not directly relevant to the data scientist role at Microsoft."]
-            }),
-            interactive=True,
-            datatype="markdown"
-        )
-        prompt = gr.Textbox(label="Prompt", value="")
-        run = gr.Button("🚀 Run")
-        run.click(fn=fn_auto, inputs=[df, prompt], outputs=[prompt, df])
-
     with gr.Tab(label="BatchPrompter"):
         prompt = gr.Textbox(label="Prompt", value="You are a friendly AI.\n\nReply to {name}'s message:\n\n{message}")
         file = gr.File(label="Data")
@@ -116,6 +102,20 @@ with gr.Blocks() as demo:
             run.click(fn=fn_batch, inputs=[prompt, df, file], outputs=df)
             download = gr.DownloadButton(label="⬇️ Download", visible=False)
         file.change(fn=fn_upload, inputs=file, outputs=[df, download])
+
+    with gr.Tab(label="AutoPrompter"):
+        df = gr.DataFrame(pd.DataFrame({
+            "input": ["John, Data Scientist, Google", "Jane, Software Engineer, Facebook"],
+            "output": [
+                "Score: 10/10\nExplanation: As a data scientist at Google, John is highly qualified for the job opening of data scientist at Microsoft.",
+                "Score: 5/10\nExplanation: Although Facebook is a prestigious tech company, Jane's experience as a software engineer is not directly relevant to the data scientist role at Microsoft."]
+            }),
+            interactive=True,
+            datatype="markdown"
+        )
+        prompt = gr.Textbox(label="Prompt", value="")
+        run = gr.Button("🚀 Run")
+        run.click(fn=fn_auto, inputs=[df, prompt], outputs=[prompt, df])
 
 if __name__ == "__main__":
     demo.launch()
