@@ -98,8 +98,18 @@ Only respond with the new prompt."""
     df['response'] = response
     return [gr.Textbox(prompt, visible=True), gr.DataFrame(df)]
 
+def fn_prompter(initial_prompt):
+    formatted_prompt = initial_prompt
+    return formatted_prompt
+
 with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
+
+    with gr.Tab(label="PromptFormatter"):
+        initial_prompt = gr.Textbox(label="Prompt", value="")
+        run = gr.Button("🚀 Run")
+        formatted_prompt = gr.Markdown()
+        run.click(fn=fn_prompter, inputs=initial_prompt, outputs=formatted_prompt)
 
     with gr.Tab(label="BatchPrompter"):
         prompt = gr.Textbox(label="Prompt", value="You are a friendly AI.\n\nReply to {{name}}'s message:\n\n{{message}}")
