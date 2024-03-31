@@ -155,41 +155,32 @@ scoring_prompt = {
             "instruction": "Please extract the candidate's name from the profile. Clean the name by removing any special characters or numbers.",
         },
         {
-            "header": "Disqualification by lack of experience",
+            "header": "Automatic Disqualification",
             "field": "disqualified",
-            "instruction": "It is crucial to mark candidates whose years of relevant experience exceeds or falls short of the expected years of experience range as 'Disqualified'. This step is critical and must be done, as hiring candidates outside the expected range could adversely affect the business. Therefore, ensure rigorous compliance with the disqualification criteria. It is imperative to ensure that the process of automatic disqualification for candidates falling outside the expected experience range does not influence the overall scoring system. The scoring system should remain unaffected by disqualification criteria to serve educational and reference purposes",
+            "instruction": "It is crucial to mark underqualified and overqualified candidates whose experience falls outside the acceptable range as 'Disqualified'. This step is critical as hiring candidates outside the established range could adversely affect the business. Therefore, ensure rigorous compliance with the disqualification criteria. It is imperative to ensure that the process of automatic disqualification for candidates falling outside the acceptable experience range does not influence the overall scoring system. The scoring system should remain unaffected by disqualification criteria to serve educational and reference purposes. If a candidate is overqualified or underqualified, output 'Y'. Otherwise, output 'N'.",
             "format": "Y/N",
             "outputs": [
                 {
                     "header": "Job description years of experience",
                     "field": "job_years",
                     "instruction": "Analyze the provided job description to extract the clearly specified minimum and maximum years of professional experience required. Record the job description's experience range stated.",
-                    "format": "Min years: <min_years>, Max years: <max_years>"
                 },
                 {
-                    "header": "Expected years of experience",
-                    "field": "expected_years",
-                    "instruction": "Define an expected experience range that accommodates candidates who are slightly less or more experienced than the stipulated requirements.",
-                    "format": "Min years: <min_years>, Max years: <max_years>"
+                    "header": "Acceptable years of experience",
+                    "field": "acceptable_years",
+                    "instruction": "Based on this, define an acceptable experience range that accommodates candidates who are slightly less or more experienced than the stipulated requirements. This is the maximum deviation from the job description's specified years of experience that is still considered acceptable. Any candidate falling outside this range is overqualified or underqualified and must be marked as 'Disqualified'.",
                 },
                 {
-                    "header": "Candidate profile years of experience",
+                    "header": "Candidate profile years of relevant experience",
                     "field": "candidate_years",
-                    "instruction": "Initiate the evaluation by calculating each candidate's total years of professional experience. Apply discernment to omit internships and avoid double-counting periods of concurrent employment. Document the calculated years of professional experience for each candidate.",
-                    "format": "<years> years <months> months"
+                    "instruction": "Initiate the evaluation by calculating each candidate's total years of relevant professional experience. Apply discernment to omit internships and avoid double-counting periods of concurrent employment. Document the calculated years of relevant professional experience for each candidate.",
                 },
                 {
-                    "header": "Candidate years of experience exceed or falls short of expected years of experience",
-                    "field": "candidate_exceeds_or_falls_short_expected_years",
-                    "instruction": "State if the candidate's years of experience exceeds or falls short of the expected years of experience defined by 'expected_years'. Inspect the candidate's years of experience and the expected years of experience, then determine if the candidate's years of experience exceeds or falls short of the expected years of experience.",
-                    "format": "Y/N"
+                    "header": "Candidate experience qualified, overqualified or underqualified",
+                    "field": "qualification",
+                    "instruction": "State whether the candidate is qualified (Q), overqualified (OU) or underqualified (UQ) based on the candidate's years of experience is outside your defined acceptable range. Example 1: acceptable_years: 1-2 years, candidate_years: 3 years, outside_range: 'OQ'. Example 2: acceptable_years: 3-5 years, candidate_years: 2 years, outside_range: 'UQ'. Example 3: acceptable_years: 6-8 years, candidate_years: 8 years 1 month, outside_range: 'OQ'.",
+                    "format": "Q/OQ/UQ"
                 },
-                # {
-                #     "header": "Disqualification Reasoning",
-                #     "field": "disqualification_reasoning",
-                #     "instruction": "Provide a detailed working of whether a candidate is disqualified based on his years of relevant experience and the job description's stated required years of experience.",
-                #     "format": "Answer every question: What's the job description's required YOE? What's an acceptable YOE range? What's the candidate's YOE? Does the candidate's YOE exceed, meet, or fall short of the acceptable YOE range? What is the final decision?"
-                # }
             ],
         },
         {
