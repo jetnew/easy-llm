@@ -6,6 +6,7 @@ import gradio as gr
 from concurrent.futures import ThreadPoolExecutor
 import re
 import pandas as pd
+from prompter import scoring_prompt, format_prompt
 
 def llm(messages, model="gpt-4-turbo-preview", json_mode=False):
     kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
@@ -15,6 +16,7 @@ def llm(messages, model="gpt-4-turbo-preview", json_mode=False):
         # model="gpt-3.5-turbo",
         messages=system+messages,
         max_tokens=4096,
+        temperature=0,
         **kwargs
     )
     response = response.choices[0].message.content.replace("\u2019", "'").replace("\u2013", "-").replace("\u2014", "-")
@@ -99,14 +101,13 @@ Only respond with the new prompt."""
     return [gr.Textbox(prompt, visible=True), gr.DataFrame(df)]
 
 def fn_prompter(initial_prompt):
-    formatted_prompt = initial_prompt
-    return formatted_prompt
+    return format_prompt(json.loads(initial_prompt))
 
 with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
 
     with gr.Tab(label="PromptFormatter"):
-        initial_prompt = gr.Textbox(label="Prompt", value="")
+        initial_prompt = gr.Textbox(label="Prompt", value=json.dumps(scoring_prompt, indent=4))
         run = gr.Button("🚀 Run")
         formatted_prompt = gr.Markdown()
         run.click(fn=fn_prompter, inputs=initial_prompt, outputs=formatted_prompt)
