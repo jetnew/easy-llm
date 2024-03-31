@@ -109,7 +109,7 @@ with gr.Blocks() as demo:
     with gr.Tab(label="PromptFormatter"):
         initial_prompt = gr.Textbox(label="Prompt", value=json.dumps(scoring_prompt, indent=4))
         run = gr.Button("🚀 Run")
-        formatted_prompt = gr.Markdown()
+        formatted_prompt = gr.Textbox()
         run.click(fn=fn_prompter, inputs=initial_prompt, outputs=formatted_prompt)
 
     with gr.Tab(label="BatchPrompter"):
