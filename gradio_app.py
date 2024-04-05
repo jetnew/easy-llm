@@ -107,7 +107,7 @@ with gr.Blocks() as demo:
     gr.Markdown("# 🕶 EasyLLM")
 
     with gr.Tab(label="PromptFormatter"):
-        initial_prompt = gr.Textbox(label="Prompt", value=json.dumps(scoring_prompt, indent=4))
+        initial_prompt = gr.Textbox(label="Prompt", value="")
         run = gr.Button("🚀 Run")
         formatted_prompt = gr.Textbox()
         run.click(fn=fn_prompter, inputs=initial_prompt, outputs=formatted_prompt)

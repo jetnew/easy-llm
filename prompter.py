@@ -2,6 +2,7 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 from openai import OpenAI
+import re
 
 def llm(messages, model="gpt-4-turbo-preview", json_mode=False):
     kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
@@ -369,70 +370,32 @@ def format_prompt(prompt):
     outputs = format_outputs(prompt)
     return objective + fields + inputs + outputs
 
+def parse_response(response):
+    lines = response.split('\n')
+    parsed_dict = {}
+    current_key = None
+    current_value = ""
+    for line in lines:
+        if re.match(r"^\d+(\.\d+)*\.\s", line):
+            if current_key is not None:
+                parsed_dict[current_key] = current_value.strip()
+            key_with_number, value = line.split(':', 1)
+            current_key = re.sub(r"^\d+(\.\d+)*\.\s", "", key_with_number).strip()
+            current_value = value.strip() if value.strip() else ""
+        else:
+            current_value += "\n" + line
+    if current_key is not None:
+        parsed_dict[current_key] = current_value.strip()
+    return parsed_dict
 
 if __name__ == "__main__":
+    response = llm([{"role": "user", "content": "Hi there!"}])
+    print(response)
     # prompt = format_prompt(scoring_prompt).format(job=job, profile=profile)
     # print(prompt)
     # response = llm([{"role": "user", "content": prompt}])
     # print("\n\nResponse:")
     # print(response)
-
-    response = """1. candidate_name: Rayner Kwok
-2.1. job_years: 5-6 years
-2.2. acceptable_years: 4-7 years
-2.3. candidate_years: 8 years 3 months
-2.4. qualification: OQ
-2. disqualified: Y
-3.1. criteria_1_trait_1: Rayner Kwok has significant experience in the FinTech sector, particularly with WorldFirst, a part of Ant Group, known for its rapid growth and innovation in financial services. His role involved optimizing customer journey channels and engaging with high-level executives, indicating a strong background in strategic sales within a leading company in the FinTech space. His partnership efforts to provide multi-currency accounts and payment solutions demonstrate his active involvement in expanding business services, aligning with the criteria for high-performance environments. His tenure at WorldFirst spans over 6 years, showcasing stability and depth in a competitive, growth-centric FinTech environment. This experience is highly relevant and demonstrates a proven track record in a leading sales-driven company.
-3.2. criteria_1_trait_2: Rayner's background does not prominently feature experience in large corporations with more than 1000 employees, focusing instead on dynamic roles within the FinTech sector. His roles have emphasized direct sales, partnerships, and business development rather than navigating the complexities of large corporate structures. This lack of large corporation experience is not a detriment in this context, as his expertise aligns more closely with the agility and innovation found in smaller, growth-focused companies. His experience with WorldFirst and Ant Group, both significant players in the FinTech space, suggests familiarity with innovative, market-leading environments rather than traditional large corporate settings. Therefore, his profile does not reflect the typical large corporation experience but rather highlights his suitability for a startup or growth-centric company.
-3.3. criteria_1_evaluation: Rayner Kwok's professional history with WorldFirst and Ant Group positions him well within the criteria for high-value startup or leading SaaS company experience. His role in business development and partnerships in the FinTech sector, a rapidly evolving and competitive field, underscores his capability to thrive in dynamic environments. The absence of large corporation experience in his profile is not a negative factor; instead, it emphasizes his alignment with innovative and agile business models. His long tenure and strategic roles at WorldFirst demonstrate a deep understanding of the challenges and opportunities in the FinTech industry, marking him as a strong candidate based on these criteria. His experience is directly relevant to the high-growth, innovative nature of the hiring company, making his background a valuable asset.
-3. criteria_1_score: 3
-4.1. relevant_heuristics: Sourcing & Closing Clients, Assessing Sales Achievements, B2B vs B2C Sales experience, Priority for Software and Venture-Backed Startup sales Experience
-4.2. heuristics_justification: Rayner Kwok's experience at WorldFirst, a notable entity in the FinTech sector, directly aligns with the heuristic of prioritizing sales experience in software and venture-backed startups. His role involved both sourcing and closing clients, indicating a comprehensive skill set in full-cycle sales, which is crucial for the position. His engagement with MDs, CFOs, and other high-level executives, along with his focus on B2B sales, matches the preference for B2B over B2C sales experience. The achievements listed, such as optimizing client channels and forming strategic partnerships, suggest a quantifiable impact on business growth, although specific sales targets or achievements are not detailed. His background in the FinTech industry, known for its B2B focus and complex sales cycles, further supports his competency in the required sales domain.
-4. criteria_2_score: 4
-5.1.1. industry_sector: Financial Services, FinTech, Online payment processing solutions
-5.1.2. industry_specific_key_terms: B2B Sales, Financial Services, FX experience, Forward Contracts, Hedging knowledge, Cold call
-5.1.3. criteria_3_trait_1_evaluation: Rayner Kwok's profile demonstrates a strong alignment with the industry-specific knowledge, skills, and experience required for the role. His extensive experience in the FinTech sector, particularly with WorldFirst, a company that provides payment solutions, directly correlates with the niche of online payment processing solutions. His role in engaging with key decision-makers and offering multi-currency accounts and payment solutions showcases his expertise in FX experience, forward contracts, and hedging knowledge. The mention of outbound sales and cold calling aligns with the key terms identified, indicating his proficiency in these areas. His background in financial services and B2B sales further solidifies his fit for the job's industry-specific requirements.
-5.1. criteria_3_trait_1_score: 1
-5.2.1. target_customer_segments: Mid-Market
-5.2.2. criteria_3_trait_2_evaluation: The candidate's experience with WorldFirst, engaging MDs, CFOs, and other high-level executives, suggests familiarity with the Mid-Market segment, as these roles typically exist within companies of this size. His focus on solution-based sales and building business relationships indicates a strategic approach suited to mid-market companies, which often require tailored solutions. The nature of his work, involving multi-currency accounts and payment solutions, is relevant to mid-market businesses looking to optimize international transactions. However, the profile does not explicitly mention the size of the companies he targeted, leaving some room for inference. His experience seems well-aligned with the target customer segment, although further clarification during an interview would be beneficial.
-5.2. criteria_3_trait_2_score: 1
-5.3. criteria_3_evaluation: Rayner Kwok's profile evidences a strong match for the specific skills and experience required by the job description. His extensive background in the FinTech sector, particularly in roles that involve strategic sales and partnerships, aligns well with the industry-specific knowledge and experience sought. His engagement with mid-market executives and focus on solution-based sales demonstrate his capability and familiarity with the target customer segment specified in the job description. While his experience provides a solid foundation, further exploration of his direct interactions with mid-market companies would enhance the evaluation. Overall, his profile suggests a high potential for success in the role, supported by relevant industry experience and a strategic approach to sales.
-5. criteria_3_score: 2
-6.1. holistic_overview_pros: Rayner Kwok's extensive experience in the FinTech sector, particularly with WorldFirst, positions him as a strong candidate for the Business Development Manager role. His direct involvement in strategic sales, partnerships, and solution-based approaches aligns with the job's requirements. His proficiency in B2B sales, FX products, and hedging knowledge is directly relevant to the financial services focus of the role. His long tenure at a leading company in the FinTech space demonstrates stability and a proven track record in a competitive industry. His experience engaging with mid-market executives suggests he is well-equipped to target the specified customer segment effectively.
-6.2. holistic_overview_cons: The candidate's profile lacks explicit quantifiable sales achievements, making it difficult to assess his performance against specific targets. While his experience aligns with the industry and customer segment, the absence of detailed outcomes or metrics leaves some uncertainty about his impact. The profile does not provide explicit examples of navigating challenging customer interactions or internal stakeholder management, which are important aspects of the role. Although his experience with mid-market segments is inferred, explicit confirmation of the size of companies he has successfully targeted would strengthen his candidacy. The profile could benefit from more detail on his role in contributing to strategic sales direction and market expansion efforts in Asia.
-6. holistic_overview_score: 8
-7.1. interview_exploration_areas: Quantifiable sales achievements and targets, Experience with specific mid-market company sizes, Role in strategic sales direction and market expansion
-7. interview_recommendation: Y"""
-
-    import re
-    # Splitting the string into lines
-    lines = response.split('\n')
-
-    # Parsing the lines into a dictionary
-    parsed_dict = {}
-    current_key = None
-    current_value = ""
-    for line in lines:
-        # Check if the line looks like a new key
-        if re.match(r"^\d+(\.\d+)*\.\s", line):
-            # If there's a current key, save the accumulated value to the dictionary
-            if current_key is not None:
-                parsed_dict[current_key] = current_value.strip()
-            # Extract the key without numbering and reset for the new key
-            key_with_number, value = line.split(':', 1)
-            # Remove numbering and leading/trailing spaces from the key
-            current_key = re.sub(r"^\d+(\.\d+)*\.\s", "", key_with_number).strip()
-            current_value = value.strip() if value.strip() else ""
-        else:
-            # Accumulate lines for the current value
-            current_value += "\n" + line
-
-    # Don't forget to add the last key-value pair
-    if current_key is not None:
-        parsed_dict[current_key] = current_value.strip()
-
-    # Converting the dictionary to JSON
-    json_output = json.dumps(parsed_dict, indent=4)
-
-    print(json_output)
+    # output = parse_response(response)
+    # print("\n\nJSON:")
+    # print(json.dumps(output, indent=4))
